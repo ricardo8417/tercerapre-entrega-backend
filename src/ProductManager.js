@@ -17,7 +17,7 @@ import fs from "fs"
     return 1; //Si no tiene elementos el ID es 1
   };
   //Agrega un producto
-  addProduct = async (title, descripcion, price, thumbnail, code, stock) => {
+  addProduct = async (title=String, descripcion=String, price=Number, thumbnail=[], code=String, stock=Number,category=String) => {
     try {
       //Valida que no se agrege un objeto con campos vacios
       function validarProducto(product) {
@@ -39,6 +39,9 @@ import fs from "fs"
         thumbnail,
         code,
         stock,
+        status:true,
+        category
+
       };
 
       const codeRep = list.some((element) => element.code === code);
@@ -54,9 +57,7 @@ import fs from "fs"
           this.format
         );
       } else {
-        return console.log(
-          "No pueden crearse productos con campos incompletos"
-        );
+        return console.log("No pueden crearse productos con campos incompletos");
       }
     } catch (e) {
       console.log(e);
@@ -108,40 +109,36 @@ import fs from "fs"
     }
   };
 
-  updateProduct = async (
-    id,
-    title,
-    descripcion,
-    price,
-    thumbnail,
-    code,
-    stock
-  ) => {
+  updateProduct = async (id,updateFields) => {
     try {
       let data = await this.getProduct();
 
-      let test = data.find((element) => element.id == id);
-
-      if (!test)
-        return console.log("No se puede actualizar un objeto que no existe");
-
-      if (!title || !descripcion || !price || !thumbnail || !stock || !code) {
-        return console.log("Error: Missing Variables");
-      } else {
-        test.title = title;
-        test.descripcion = descripcion;
-        test.price = price;
-        test.thumbnail = thumbnail;
-        test.code = code;
-        test.stock = stock;
-        await fs.promises.writeFile(
-          this.path,
-          JSON.stringify(data, null, "\t"),
-          this.format
-        );
+      if (data.length === 0) {
+        console.log("No se a podido actualizar, el archivo aún está vacío");
+        return false;
       }
-    } catch (e) {
-      console.log(e);
+
+      const productIndex = data.findIndex((prods) => prods.id === id);
+      console.log(productIndex);
+
+      if (productIndex === -1) {
+        console.log("No se encontró producto con el ID:", id);
+        return false;
+      }
+
+      const updatedProduct = {
+        ...data[productIndex],
+        ...updateFields,
+      };
+
+      data[productIndex] = updatedProduct;
+
+      await fs.promises.writeFile("./productos.json",JSON.stringify(data));
+      console.log("Producto actualizado correctamente.");
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
     }
   };
 }
